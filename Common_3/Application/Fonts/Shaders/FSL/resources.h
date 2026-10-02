@@ -37,6 +37,7 @@ STRUCT(UniformBlock)
     DATA(float2, pad, None);
 };
 
-#include "FontStash.srt.h"
+// ASTRA PATCH (forge: includes-com-caixa-do-arquivo): nome igual ao arquivo versionado (host Linux diferencia caixa).
+#include "fontstash.srt.h"
 
 #endif

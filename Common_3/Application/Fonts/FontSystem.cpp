@@ -44,7 +44,8 @@
 
 #include "../../Graphics/FSL/fsl_srt.h"
 #include "../../Graphics/FSL/defaults.h"
-#include "./Shaders/FSL/Resources.h"
+// ASTRA PATCH (forge: includes-com-caixa-do-arquivo): nome igual ao arquivo versionado (host Linux diferencia caixa).
+#include "./Shaders/FSL/resources.h"
 
 #ifdef ENABLE_FORGE_FONTS
 

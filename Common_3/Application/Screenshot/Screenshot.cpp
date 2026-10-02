@@ -34,7 +34,8 @@
 
 #include "../../Graphics/FSL/fsl_srt.h"
 #include "../../Graphics/FSL/defaults.h"
-#include "./Shaders/FSL/Copy.comp.srt.h"
+// ASTRA PATCH (forge: includes-com-caixa-do-arquivo): nome igual ao arquivo versionado (host Linux diferencia caixa).
+#include "./Shaders/FSL/copy.comp.srt.h"
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #define STBIW_MALLOC  tf_malloc
