@@ -2126,16 +2126,21 @@ GPUPresetLevel getGPUPresetLevel(uint32_t vendorId, uint32_t modelId, const char
         }
     }
 
-#if defined(ENABLE_GRAPHICS_RUNTIME_CHECK)
-    if (presetLevel != GPU_PRESET_NONE)
-    {
-        LOGF(eINFO, "Setting preset level %s for gpu vendor:%s model:%s", presetLevelToString(presetLevel), vendorName, modelName);
-    }
-    else
+    // ASTRA PATCH (forge: preset-padrao-release): o upstream só aplicava o preset padrão dentro de
+    // ENABLE_GRAPHICS_RUNTIME_CHECK (debug). Em release, toda GPU ausente do gpu.data ficava sem preset e o
+    // initRenderer a recusava ("Office preset"). Agora o padrão vale sempre; só o log fica restrito.
+    if (presetLevel == GPU_PRESET_NONE)
     {
         presetLevel = gDefaultPresetLevel;
+#if defined(ENABLE_GRAPHICS_RUNTIME_CHECK)
         LOGF(eWARNING, "Couldn't find gpu %s model: %s in gpu.data. Setting preset to %s as a default.", vendorName, modelName,
              presetLevelToString(presetLevel));
+#endif
+    }
+#if defined(ENABLE_GRAPHICS_RUNTIME_CHECK)
+    else
+    {
+        LOGF(eINFO, "Setting preset level %s for gpu vendor:%s model:%s", presetLevelToString(presetLevel), vendorName, modelName);
     }
 #endif
 
