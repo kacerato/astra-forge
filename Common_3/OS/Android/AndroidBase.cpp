@@ -504,7 +504,9 @@ void processAllEvents(android_app* app, bool* windowReady, int* cancelationToken
         // Used to poll the events in the main loop
         int                  events;
         android_poll_source* source;
-        if (ALooper_pollAll(*windowReady ? 1 : 0, NULL, &events, (void**)&source) >= 0)
+        // ASTRA PATCH (forge: ndk-r27-looper): ALooper_pollAll foi removido do NDK r27+. Sem callbacks registrados no
+        // looper (só as fontes do native_app_glue), pollOnce tem a mesma semântica: um evento por volta do laço.
+        if (ALooper_pollOnce(*windowReady ? 1 : 0, NULL, &events, (void**)&source) >= 0)
         {
             if (source != NULL)
                 source->process(app, source);
@@ -769,7 +771,9 @@ int AndroidMain(void* param, IApp* app)
         int                  events;
         android_poll_source* source;
 
-        if (ALooper_pollAll(windowReady ? 1 : 0, NULL, &events, (void**)&source) >= 0)
+        // ASTRA PATCH (forge: ndk-r27-looper): ALooper_pollAll foi removido do NDK r27+. Sem callbacks registrados no
+        // looper (só as fontes do native_app_glue), pollOnce tem a mesma semântica: um evento por volta do laço.
+        if (ALooper_pollOnce(windowReady ? 1 : 0, NULL, &events, (void**)&source) >= 0)
         {
             if (source != NULL)
             {
