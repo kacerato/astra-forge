@@ -363,7 +363,15 @@ int WindowsMain(int argc, char** argv, IApp* app)
 #if defined(ENABLE_GRAPHICS_VALIDATION) && defined(VULKAN) && VK_OVERRIDE_LAYER_PATH
     // We are now shipping validation layer in the repo itself to remove dependency on Vulkan SDK to be installed
     // Set VK_LAYER_PATH to executable location so it can find the layer files that our application wants to use
-    SetEnvironmentVariableA("VK_LAYER_PATH", pSystemFileIO->GetResourceMount(RM_DEBUG));
+    // ASTRA PATCH (forge: vulkan-windows): GetResourceMount/RM_DEBUG não existem mais na 1.63; usa a pasta do
+    // executável, como o LinuxBase.cpp faz com /proc/self/exe.
+    {
+        char exePath[MAX_PATH] = { 0 };
+        DWORD len = GetModuleFileNameA(NULL, exePath, MAX_PATH);
+        while (len > 0 && exePath[len - 1] != '\\' && exePath[len - 1] != '/')
+            exePath[--len] = '\0';
+        SetEnvironmentVariableA("VK_LAYER_PATH", exePath);
+    }
 #endif
 
     initLog(app->GetName(), DEFAULT_LOG_LEVEL);
