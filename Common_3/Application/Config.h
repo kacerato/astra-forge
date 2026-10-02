@@ -303,7 +303,11 @@ COMPILE_ASSERT(sizeof(ssize_t) == sizeof(int64_t));
 //////////////////////////////////////////////
 // #define ENABLE_MATH_CHECKS // Enables low level math library debug checks like SIMD variable alignment checks
 #define ENABLE_FORGE_SCRIPTING
+// ASTRA PATCH (forge: reload-shader-opcional): desligável por ASTRA_FORGE_NO_RELOAD_SHADER (o cliente de recarga
+// depende da UI/input do IApp; a Astra terá recarga própria).
+#ifndef ASTRA_FORGE_NO_RELOAD_SHADER
 #define ENABLE_FORGE_RELOAD_SHADER
+#endif
 #define ENABLE_FORGE_UI
 #define ENABLE_FORGE_FONTS
 #define ENABLE_FORGE_INPUT

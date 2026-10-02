@@ -26,6 +26,8 @@
 #include <android/log.h>
 #include <android/looper.h>
 #include <android/native_activity.h>
+// ASTRA PATCH (forge: header-sem-app-glue): incluído aqui porque IOperatingSystem.h não o inclui mais.
+#include <android_native_app_glue.h>
 #include <android/native_window_jni.h>
 #include <ctime>
 #include <memory_advice/memory_advice.h>

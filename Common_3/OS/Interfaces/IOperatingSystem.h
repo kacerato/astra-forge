@@ -53,7 +53,12 @@ typedef uint64_t uint64;
 
 #elif defined(__ANDROID__)
 #include <android/log.h>
-#include <android_native_app_glue.h>
+// ASTRA PATCH (forge: header-sem-app-glue): o header público só precisa dos tipos usados em WindowHandle.
+// Incluir android_native_app_glue.h prendia todo consumidor ao glue do NativeActivity (a Astra usa GameActivity,
+// cujo glue tem o mesmo nome de header). Quem usa o glue (AndroidBase/AndroidInput/AndroidWindow) o inclui direto.
+#include <android/configuration.h>
+#include <android/native_activity.h>
+#include <android/native_window.h>
 
 #elif defined(__linux__) && !defined(VK_USE_PLATFORM_GGP)
 #define VK_USE_PLATFORM_XLIB_KHR

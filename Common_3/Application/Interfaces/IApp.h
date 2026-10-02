@@ -265,6 +265,8 @@ FORGE_API extern int macOSMain(int argc, const char** argv, IApp* app);
         return macOSMain(argc, argv, &app);                       \
     }
 #elif defined(__ANDROID__)
+// ASTRA PATCH (forge: header-sem-app-glue): declara android_main com ligação C (antes vinha de IOperatingSystem.h).
+#include <android_native_app_glue.h>
 FORGE_API extern int AndroidMain(void* param, IApp* app);
 #define RUN_APPLICATION_MAIN(argc, argv, appInstance, customPtr) AndroidMain(customPtr, &(appInstance))
 
