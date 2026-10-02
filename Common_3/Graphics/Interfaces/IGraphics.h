@@ -2231,6 +2231,10 @@ typedef enum SwapChainCreationFlags
 {
     SWAP_CHAIN_CREATION_FLAG_NONE = 0x0,
     SWAP_CHAIN_CREATION_FLAG_ENABLE_FOVEATED_RENDERING_VR = 0x1,
+    /// ASTRA PATCH (forge: pre-rotacao): Vulkan/Android. Cria a swapchain com preTransform = currentTransform
+    /// (sem rotação no compositor). Em 90/270 a swapchain fica com largura/altura trocadas e o app precisa
+    /// girar o clip-space por SwapChain::mPreRotationDegrees.
+    SWAP_CHAIN_CREATION_FLAG_PRE_ROTATION = 0x2,
 } SwapChainCreationFlags;
 MAKE_ENUM_FLAG(uint32_t, SwapChainCreationFlags);
 
@@ -2328,6 +2332,12 @@ typedef struct SwapChain
     uint32_t        mEnableVsync : 1;
     ColorSpace      mColorSpace : 4;
     TinyImageFormat mFormat : 8;
+    /// ASTRA PATCH (forge: pre-rotacao): rotação que o app deve aplicar ao clip-space (0, 90, 180 ou 270 graus).
+    /// Sempre 0 sem SWAP_CHAIN_CREATION_FLAG_PRE_ROTATION.
+    uint32_t mPreRotationDegrees;
+    /// ASTRA PATCH (forge: pre-rotacao): o último acquire/present devolveu VK_SUBOPTIMAL_KHR ou
+    /// VK_ERROR_OUT_OF_DATE_KHR (ex.: giro de 180 graus sem mudança de tamanho). O app deve recriar a swapchain.
+    bool mSuboptimal;
 } SwapChain;
 
 typedef enum ShaderTarget

@@ -5100,6 +5100,23 @@ void addSwapChain(Renderer* pRenderer, const SwapChainDesc* pDesc, SwapChain** p
     extent.width = CLAMP(pDesc->mWidth, caps.minImageExtent.width, caps.maxImageExtent.width);
     extent.height = CLAMP(pDesc->mHeight, caps.minImageExtent.height, caps.maxImageExtent.height);
 
+    // ASTRA PATCH (forge: pre-rotacao): com pré-rotação a imagem fica na orientação nativa do painel.
+    const bool preRotate = (pDesc->mFlags & SWAP_CHAIN_CREATION_FLAG_PRE_ROTATION) && (caps.supportedTransforms & caps.currentTransform) &&
+                           (caps.currentTransform & (VK_SURFACE_TRANSFORM_ROTATE_90_BIT_KHR | VK_SURFACE_TRANSFORM_ROTATE_180_BIT_KHR |
+                                                     VK_SURFACE_TRANSFORM_ROTATE_270_BIT_KHR));
+    uint32_t preRotationDegrees = 0;
+    if (preRotate)
+    {
+        preRotationDegrees = (caps.currentTransform & VK_SURFACE_TRANSFORM_ROTATE_90_BIT_KHR)    ? 90
+                             : (caps.currentTransform & VK_SURFACE_TRANSFORM_ROTATE_180_BIT_KHR) ? 180
+                                                                                                 : 270;
+        if (preRotationDegrees != 180)
+        {
+            extent.width = CLAMP(pDesc->mHeight, caps.minImageExtent.width, caps.maxImageExtent.width);
+            extent.height = CLAMP(pDesc->mWidth, caps.minImageExtent.height, caps.maxImageExtent.height);
+        }
+    }
+
     // Get queue family properties
     uint32_t                 queueFamilyPropertyCount = 0;
     VkQueueFamilyProperties* queueFamilyProperties = NULL;
@@ -5151,7 +5168,11 @@ void addSwapChain(Renderer* pRenderer, const SwapChainDesc* pDesc, SwapChain** p
 
     VkSurfaceTransformFlagBitsKHR surfacePreTransform;
     // #TODO: Add more if necessary but identity should be enough for now
-    if (caps.supportedTransforms & VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR)
+    if (preRotate) // ASTRA PATCH (forge: pre-rotacao)
+    {
+        surfacePreTransform = caps.currentTransform;
+    }
+    else if (caps.supportedTransforms & VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR)
     {
         surfacePreTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
     }
@@ -5273,6 +5294,8 @@ void addSwapChain(Renderer* pRenderer, const SwapChainDesc* pDesc, SwapChain** p
     pSwapChain->mVk.mPresentQueueFamilyIndex = presentQueueFamilyIndex;
     pSwapChain->mVk.pPresentQueue = presentQueue;
     pSwapChain->mVk.pSwapChain = vkSwapchain;
+    pSwapChain->mPreRotationDegrees = preRotationDegrees; // ASTRA PATCH (forge: pre-rotacao)
+    pSwapChain->mSuboptimal = false;
 
     *ppSwapChain = pSwapChain;
 }
@@ -8755,9 +8778,12 @@ void acquireNextImage(Renderer* pRenderer, SwapChain* pSwapChain, Semaphore* pSi
         if (vk_res == VK_ERROR_OUT_OF_DATE_KHR)
         {
             *pImageIndex = (uint32_t)-1;
+            pSwapChain->mSuboptimal = true; // ASTRA PATCH (forge: pre-rotacao)
             vkResetFences(pRenderer->mVk.pDevice, 1, &pFence->mVk.pFence);
             return;
         }
+        if (vk_res == VK_SUBOPTIMAL_KHR)
+            pSwapChain->mSuboptimal = true; // ASTRA PATCH (forge: pre-rotacao)
 
         if (vk_res == VK_ERROR_DEVICE_LOST)
         {
@@ -8774,6 +8800,7 @@ void acquireNextImage(Renderer* pRenderer, SwapChain* pSwapChain, Semaphore* pSi
         {
             *pImageIndex = (uint32_t)-1;
             pSignalSemaphore->mVk.mSignaled = false;
+            pSwapChain->mSuboptimal = true; // ASTRA PATCH (forge: pre-rotacao)
             return;
         }
 
@@ -8784,6 +8811,7 @@ void acquireNextImage(Renderer* pRenderer, SwapChain* pSwapChain, Semaphore* pSi
         {
             LOGF(eINFO, "vkAcquireNextImageKHR returned VK_SUBOPTIMAL_KHR. If window was just resized, ignore this message.");
             pSignalSemaphore->mVk.mSignaled = true;
+            pSwapChain->mSuboptimal = true; // ASTRA PATCH (forge: pre-rotacao)
             return;
         }
 
@@ -9002,6 +9030,11 @@ void queuePresent(Queue* pQueue, const QueuePresentDesc* pDesc)
         else if (vk_res == VK_ERROR_OUT_OF_DATE_KHR)
         {
             // TODO : Fix bug where we get this error if window is closed before able to present queue.
+            pSwapChain->mSuboptimal = true; // ASTRA PATCH (forge: pre-rotacao)
+        }
+        else if (vk_res == VK_SUBOPTIMAL_KHR)
+        {
+            pSwapChain->mSuboptimal = true; // ASTRA PATCH (forge: pre-rotacao)
         }
         else if (vk_res != VK_SUCCESS && vk_res != VK_SUBOPTIMAL_KHR)
         {
